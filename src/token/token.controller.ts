@@ -1,5 +1,5 @@
 // src/token/token.controller.ts
-import { Controller, Get, Query, Logger } from '@nestjs/common';
+import { Controller, Get, Query, Logger, Param } from '@nestjs/common';
 import { EventPattern, Payload, Ctx, NatsContext } from '@nestjs/microservices';
 import { TokenService } from './token.service';
 
@@ -38,11 +38,6 @@ export class TokenController {
     this.logger.log(`Handled key deletion: ${data.key}`);
   }
 
-  @Get('hello')
-  async getHello() {
-    return 'Hello from token service!';
-  }
-
   @Get('info')
   async getTokenInfo(@Query('key') key: string, @Query('symbol') symbol: string) {
     this.logger.log(`Received request for token info: key=${key}, symbol=${symbol}`);
@@ -50,4 +45,9 @@ export class TokenController {
     this.logger.log(`Fetched token info: ${JSON.stringify(tokenInfo)}`);
     return tokenInfo;
   }
+  @Get('logs')
+  async getLogs(@Query('key') key: string) {
+    return this.tokenService.getLogs(key);
+  }
+
 }

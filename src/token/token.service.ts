@@ -1,5 +1,5 @@
 // src/token/token.service.ts
-import { Injectable, Logger, OnModuleInit, Inject, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, Inject, HttpException, HttpStatus, Param, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ClientProxy, EventPattern, Payload, NatsContext, Ctx } from '@nestjs/microservices';
 import axios from 'axios';
@@ -162,6 +162,32 @@ export class TokenService implements OnModuleInit {
       } else {
         throw new HttpException('Error fetching token info', HttpStatus.INTERNAL_SERVER_ERROR);
       }
+    }
+  }
+
+  async getLogs(key: string): Promise<any> {
+    try {
+      // Fetch logs related to the provided access key
+      const logs = await this.prisma.requestLog.findMany({
+        where: {
+          accessKeyId: key,  // Filter by the access key ID
+        },
+        include: {
+          AccessKey: true,  // Include related AccessKey data if needed
+        },
+      });
+
+      if (!logs || logs.length === 0) {
+        this.logger.error(`No logs found for key: ${key}`);
+        throw new NotFoundException(`No logs found for key: ${key}`);
+      }
+
+      this.logger.log(`Fetched ${logs.length} logs for key: ${key}`);
+      return logs;
+    } catch (error) {
+      // Log and throw an HTTP exception with a message
+      this.logger.error(`Error fetching logs: ${error.message}`);
+      throw new HttpException('Error fetching logs', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
